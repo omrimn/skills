@@ -4,6 +4,8 @@ description: Uses bulk products endpoint to create multiple products with invent
 ---
 # RECIPE: Business Recipe - Bulk Creating Wix Store Products with inventory and options
 
+> **Standard call shape (every curl below).** The `<AUTH>` placeholder is shorthand for `Authorization: Bearer <TOKEN>` only. Body-bearing requests also need `Content-Type: application/json`.
+
 Learn how to create multiple Wix store products with customizable options like colors, sizes, or other variants in a single bulk operation, allowing efficient creation of product catalogs.
 
 ---

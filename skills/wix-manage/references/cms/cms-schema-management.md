@@ -4,6 +4,8 @@ description: Create and modify CMS collection structures. Covers listing collect
 ---
 # CMS Schema Management
 
+> **Standard call shape (every curl below).** The `<AUTH>` placeholder is shorthand for `Authorization: Bearer <TOKEN>` only. Body-bearing requests also need `Content-Type: application/json`.
+
 This recipe covers managing the structure (schema) of Wix CMS collections using the REST API.
 
 ## Prerequisites
@@ -20,7 +22,7 @@ This recipe covers managing the structure (schema) of Wix CMS collections using 
 **Lightweight listing (recommended for existence checks)**:
 ```bash
 curl -X GET \
-'https://www.wixapis.com/wix-data/v2/collections?fields=id' \
+'https://www.wixapis.com/wix-data/v2/collections?fields=displayName' \
 -H 'Authorization: <AUTH>'
 ```
 
@@ -120,6 +122,8 @@ curl -X GET \
 | `DATE` | Date only | `"2024-01-15"` |
 | `DATETIME` | Date and time | `{ "$date": "2024-01-15T10:00:00.000Z" }` |
 | `IMAGE` | Image reference | `"wix:image://v1/..."` |
+| `MEDIA_IMAGE` | Wix Media Image | `{ "url": "http://...", "height": 640, "width": 480, "alt": "Picture" }` |
+| `MEDIA_VECTOR_ART` | Wix Media Vector Art | `{ "uri": "wix:vector://v1/...", "viewBox": "0 0 100 100", "contentType": "shape", "svgContent": "<svg>...</svg>" }` |
 | `URL` | Web URL | `"https://example.com"` |
 | `RICH_TEXT` | HTML content | `"<p>Rich text</p>"` |
 | `ARRAY_STRING` | Array of strings | `["tag1", "tag2"]` |

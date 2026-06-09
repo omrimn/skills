@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-vi.mock('@actions/core', () => ({ getInput: vi.fn(), setSecret: vi.fn() }));
+vi.mock('@actions/core', () => ({ getInput: vi.fn(), setSecret: vi.fn(), warning: vi.fn() }));
 const mockGithubContext = {
   sha: 'main-sha-789',
   payload: {
@@ -16,7 +16,7 @@ const mockGithubContext = {
 vi.mock('@actions/github', () => ({ context: mockGithubContext }));
 
 import * as core from '@actions/core';
-import { getConfig } from '../src/utils/config';
+import { getEvalConfig, getCleanupConfig, getScheduledConfig } from '../src/utils/config';
 
 const ALL_INPUTS: Record<string, string> = {
   'github-token': 'ghs_token',
@@ -33,9 +33,9 @@ beforeEach(() => {
   vi.mocked(core.getInput).mockImplementation((name: string) => ALL_INPUTS[name] ?? '');
 });
 
-describe('getConfig in pr mode', () => {
+describe('getEvalConfig', () => {
   it('returns config with all fields populated', () => {
-    const config = getConfig();
+    const config = getEvalConfig();
     expect(config.githubToken).toBe('ghs_token');
     expect(config.evalforgeUrl).toBe('https://ef.example.com/api');
     expect(config.projectId).toBe('proj-1');
@@ -43,35 +43,32 @@ describe('getConfig in pr mode', () => {
     expect(config.mcpId).toBe('mcp-1');
     expect(config.appId).toBe('app-1');
     expect(config.appSecret).toBe('secret-1');
-    expect(config.mode).toBe('pr');
-    if (config.mode === 'pr') {
-      expect(config.prNumber).toBe(42);
-      expect(config.baseSha).toBe('base-sha-123');
-      expect(config.headSha).toBe('head-sha-456');
-    }
+    expect(config.prNumber).toBe(42);
+    expect(config.baseSha).toBe('base-sha-123');
+    expect(config.headSha).toBe('head-sha-456');
     expect(config.owner).toBe('wix');
     expect(config.repo).toBe('skills');
   });
 
   it('masks all secret inputs', () => {
-    getConfig();
+    getEvalConfig();
     expect(vi.mocked(core.setSecret)).toHaveBeenCalledWith('ghs_token');
     expect(vi.mocked(core.setSecret)).toHaveBeenCalledWith('app-1');
     expect(vi.mocked(core.setSecret)).toHaveBeenCalledWith('secret-1');
   });
 
   it('blocking is true when input is "true"', () => {
-    expect(getConfig().blocking).toBe(true);
+    expect(getEvalConfig().blocking).toBe(true);
   });
 
   it('blocking is false when input is "false"', () => {
     vi.mocked(core.getInput).mockImplementation((name: string) => ({ ...ALL_INPUTS, blocking: 'false' }[name] ?? ''));
-    expect(getConfig().blocking).toBe(false);
+    expect(getEvalConfig().blocking).toBe(false);
   });
 
   it('blocking is true when input is absent (empty string)', () => {
     vi.mocked(core.getInput).mockImplementation((name: string) => ({ ...ALL_INPUTS, blocking: '' }[name] ?? ''));
-    expect(getConfig().blocking).toBe(true);
+    expect(getEvalConfig().blocking).toBe(true);
   });
 
   it('throws when a required input is missing', () => {
@@ -82,32 +79,53 @@ describe('getConfig in pr mode', () => {
       }
       return ALL_INPUTS[name] ?? '';
     });
-    expect(() => getConfig()).toThrow('evalforge-url');
+    expect(() => getEvalConfig()).toThrow('evalforge-url');
   });
 });
 
-describe('getConfig in scheduled mode', () => {
-  beforeEach(() => {
-    vi.mocked(core.getInput).mockImplementation((name: string) => ({
-      ...ALL_INPUTS,
-      mode: 'scheduled',
-    }[name] ?? ''));
+describe('getCleanupConfig', () => {
+  it('returns cleanup config with required fields', () => {
+    const config = getCleanupConfig();
+    expect(config.evalforgeUrl).toBe('https://ef.example.com/api');
+    expect(config.projectId).toBe('proj-1');
+    expect(config.mcpId).toBe('mcp-1');
+    expect(config.appId).toBe('app-1');
+    expect(config.appSecret).toBe('secret-1');
+    expect(config.prNumber).toBe(42);
   });
 
+  it('does not include agentId, blocking, baseSha, headSha, owner, or repo', () => {
+    const config = getCleanupConfig();
+    expect(config).not.toHaveProperty('agentId');
+    expect(config).not.toHaveProperty('blocking');
+    expect(config).not.toHaveProperty('baseSha');
+    expect(config).not.toHaveProperty('headSha');
+    expect(config).not.toHaveProperty('owner');
+    expect(config).not.toHaveProperty('repo');
+  });
+
+  it('masks app-id and app-secret', () => {
+    vi.mocked(core.setSecret).mockReset();
+    getCleanupConfig();
+    expect(vi.mocked(core.setSecret)).toHaveBeenCalledWith('app-1');
+    expect(vi.mocked(core.setSecret)).toHaveBeenCalledWith('secret-1');
+  });
+});
+
+describe('getScheduledConfig', () => {
   it('returns scheduled config with headSha from context', () => {
-    const config = getConfig();
-    expect(config.mode).toBe('scheduled');
+    const config = getScheduledConfig();
     expect(config.headSha).toBe('main-sha-789');
   });
 
   it('does not include prNumber or baseSha', () => {
-    const config = getConfig();
-    expect('prNumber' in config).toBe(false);
-    expect('baseSha' in config).toBe(false);
+    const config = getScheduledConfig();
+    expect(config).not.toHaveProperty('prNumber');
+    expect(config).not.toHaveProperty('baseSha');
   });
 
   it('includes all base fields', () => {
-    const config = getConfig();
+    const config = getScheduledConfig();
     expect(config.projectId).toBe('proj-1');
     expect(config.owner).toBe('wix');
     expect(config.repo).toBe('skills');

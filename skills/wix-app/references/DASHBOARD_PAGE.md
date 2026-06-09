@@ -1,17 +1,22 @@
 
 # Wix Dashboard Page Builder
 
-Creates full-featured dashboard page extensions for Wix CLI applications. Dashboard pages appear in the Wix site owner's dashboard and enable site administrators to manage data, configure settings, and perform administrative tasks.
+Dashboard pages appear in the site owner's Wix dashboard and enable site administrators to manage data, configure settings, and perform admin tasks.
 
+## Scaffold
 
-## Quick Start Checklist
+Use `wix generate --params` with all required fields:
 
-Follow these steps in order when creating a dashboard page:
+```bash
+wix generate --params '{"extensionType":"DASHBOARD_PAGE","title":"<title>","route":"<route>"}'
+```
 
-1. [ ] Create page folder: `src/extensions/dashboard/pages/<page-name>/`
-2. [ ] Create `page.tsx` with WDS components wrapped in `WixDesignSystemProvider`
-3. [ ] Create `extensions.ts` with `extensions.dashboardPage()` and unique UUID
-4. [ ] Update `src/extensions.ts` to import and use the new extension
+| Field | Constraint |
+| --- | --- |
+| `title` | Display name shown in the dashboard sidebar. |
+| `route` | URL path segment (lowercase alphanumeric + hyphens). The page is served at `/dashboard/<route>`. The scaffold param is `route`; the builder file's runtime field is `routePath`. |
+
+The CLI generates the folder, `page.tsx`, the builder file, the UUID, and the `src/extensions.ts` registration. After scaffolding, implement the page UI in the generated `page.tsx`.
 
 ## Capabilities
 
@@ -67,59 +72,15 @@ When building a dashboard page to configure an embedded script, see [Dynamic Par
 - All parameters must be saved as strings (convert booleans/numbers to strings)
 - Use `withProviders` wrapper when dynamic parameters are present
 
-## Files and Code Structure
+## Optional builder fields
 
-Dashboard pages live under `src/extensions/dashboard/pages`. Each page has its own folder.
+The CLI scaffolds the builder with `id`, `title`, `routePath`, and `component`. To customize sidebar placement and routing, edit the generated builder file to set:
 
-**File structure:**
-
-- `src/extensions/dashboard/pages/<page>/page.tsx` — page component
-
-**Key metadata fields:**
-
-- `id` (string, GUID): Unique page ID used to register the page
-- `title` (string): Used for browser tab and optional sidebar label
-- `additionalRoutes` (string[], optional): Extra routes leading to this page
-- `sidebar.disabled` (boolean, optional): Hide page from sidebar (default false)
-- `sidebar.priority` (number, optional): Sidebar ordering; lower is higher priority
-- `sidebar.whenActive.selectedPageId` (string, optional): Which page appears selected when this page is active
-- `sidebar.whenActive.hideSidebar` (boolean, optional): Hide sidebar when this page is active
-
-## WDS Provider Usage
-
-Wrap your dashboard page component with `WixDesignSystemProvider` to enable WDS components and theming. You must also import the global CSS styles for WDS components to render correctly.
-
-```typescript
-import { WixDesignSystemProvider } from "@wix/design-system";
-import '@wix/design-system/styles.global.css';
-
-export default function () {
-  return (
-    <WixDesignSystemProvider>
-      <Page>
-        <Page.Header
-          title="My Page"
-          subtitle="This is a subtitle for your page"
-        />
-        <Page.Content>
-          <EmptyState title="My Page" subtitle="Hello World!" theme="page" />
-        </Page.Content>
-      </Page>
-    </WixDesignSystemProvider>
-  );
-}
-```
-
-**Note:** When using dynamic parameters, use the `withProviders` wrapper instead. See [Dynamic Parameters](dashboard-page/DYNAMIC_PARAMETERS.md) for details.
-
-## Hard Constraints
-
-- Do NOT invent or assume new types, modules, functions, props, events, or imports.
-- Use only entities explicitly present in the provided references or standard libraries already used in this project.
-- If something is missing, call it out explicitly and provide a minimal TODO or clearly marked placeholder rather than creating it.
-- Always verify component availability before using it in your generated code
-- If you need a component not in the list, use a basic HTML element or create a simple custom component instead
-- **Do NOT use WDS `Modal` component or custom React modal implementations** - Always use dashboard modals (see [Dashboard Modal reference](DASHBOARD_MODAL.md)) for any popup dialogs, forms, or overlays
+- `additionalRoutes` (string[]): extra routes leading to this page.
+- `sidebar.disabled` (boolean, default false): hide page from sidebar.
+- `sidebar.priority` (number): sidebar ordering; lower is higher priority.
+- `sidebar.whenActive.selectedPageId` (string): which page appears selected when this page is active.
+- `sidebar.whenActive.hideSidebar` (boolean): hide sidebar when this page is active.
 
 ## Examples
 
@@ -178,112 +139,6 @@ const handleSave = async () => {
 };
 ```
 
-## Extension Registration
-
-**Extension registration is MANDATORY and has TWO required steps.**
-
-### Step 1: Create Page-Specific Extension File
-
-Each dashboard page requires an `extensions.ts` file in its folder:
-
-**File:** `src/extensions/dashboard/pages/<page-name>/extensions.ts`
-
-```typescript
-import { extensions } from "@wix/astro/builders";
-
-export const dashboardpageMyPage = extensions.dashboardPage({
-  id: "{{GENERATE_UUID}}",
-  title: "My Page",
-  routePath: "my-page",
-  component: "./extensions/dashboard/pages/my-page/page.tsx",
-});
-```
-
-**CRITICAL: UUID Generation**
-
-The `id` must be a unique, static UUID v4 string. Generate a fresh UUID for each extension - do NOT use `randomUUID()` or copy UUIDs from examples. Replace `{{GENERATE_UUID}}` with a freshly generated UUID like `"a1b2c3d4-e5f6-7890-abcd-ef1234567890"`.
-
-| Property    | Type   | Description                                                                                          |
-| ----------- | ------ | ---------------------------------------------------------------------------------------------------- |
-| `id`        | string | Unique static UUID v4 (generate fresh - see note above)                                              |
-| `title`     | string | Display title in dashboard sidebar                                                                   |
-| `routePath` | string | URL path segment. Lowercase letters, numbers, dashes, and slashes only. Must NOT start with a slash. |
-| `component` | string | Relative path to the page component (.tsx)                                                           |
-
-### Step 2: Register in Main Extensions File
-
-**CRITICAL:** After creating the page-specific extension file, you MUST read [Extension Registration reference](EXTENSION_REGISTRATION.md) and follow the "App Registration" section to update `src/extensions.ts`.
-
-**Without completing Step 2, the dashboard page will not appear in the Wix dashboard.**
-
-## Common Mistakes - Do NOT
-
-**API confusion with other extension types:**
-
-| WRONG (Embedded Script API) | CORRECT (Dashboard Page API) |
-| --------------------------- | ---------------------------- |
-| `name: "..."`               | `title: "..."`               |
-| `source: "..."`             | `component: "..."`           |
-| `route: "..."`              | `routePath: "..."`           |
-
-Do NOT copy field names from embedded script or other extension registrations. Dashboard pages use `title`, `routePath`, and `component`.
-
-## Code Quality Requirements
-
-### TypeScript Quality Guidelines
-
-- Generated code MUST compile with zero TypeScript errors under strict settings: strict, noImplicitAny, strictNullChecks, exactOptionalPropertyTypes, noUncheckedIndexedAccess
-- Prefer type-narrowing and exhaustive logic over assertions; avoid non-null assertions (!) and unsafe casts (as any)
-- Treat optional values, refs, and array indexing results as possibly undefined and handle them explicitly
-- Use exhaustive checks for unions (e.g., switch with a never check) and return total values (no implicit undefined)
-- Do NOT use // @ts-ignore or // @ts-expect-error; fix the types or add guards instead
-
-### Core Principles
-
-- Do NOT invent or assume new types, modules, functions, props, events, or imports
-- NEVER use mocks, placeholders, or TODOs in any code
-- ALWAYS implement complete, production-ready functionality
-- Follow Wix dashboard page patterns and best practices precisely
-- Handle all edge cases and error scenarios appropriately
-
-### Code Quality Standards
-
-- Prefer TypeScript with appropriate typing
-- Use consistent naming conventions
-- Include error handling where appropriate
-- Add documentation for complex or non-obvious logic
-- Prefer async/await for asynchronous operations
-- Consider destructuring for cleaner code when beneficial
-- Return well-structured response objects
-
-### Error Handling
-
-- Always implement proper error handling in dashboard pages
-- Return appropriate error responses when data is invalid
-- Log errors appropriately for debugging using console.error
-- Handle network timeouts and external service failures
-
-### Output Constraints
-
-**Token limits:** Your max output is ~10,000 tokens. You MUST plan your response to stay well under this limit.
-
-- If making a large file (>300 lines), split it into multiple smaller files with imports.
-- If editing a large section (>100 lines), break it into multiple smaller edit operations.
-- Count your output before responding - if it seems too long, reduce scope and prioritize.
-
-**Brevity rules:** Minimize output tokens while maintaining quality and correctness.
-
-- Do NOT add README.md, documentation files, or markdown files unless explicitly requested.
-- Do NOT add excessive comments in code - only add comments where truly necessary for clarity.
-- Do NOT re-output unchanged files or duplicate existing code.
-- Do NOT generate placeholder code like "// TODO: implement" - provide working implementations.
-- Only output files that are directly required for the task.
-
-**Modular code strategy:** When generating substantial code, split into multiple smaller files with imports:
-
-- Extract utilities/helpers into separate files
-- Separate types/interfaces into dedicated type files
-- Keep each component/function focused (~50-100 lines max)
 
 ## API Spec Support
 

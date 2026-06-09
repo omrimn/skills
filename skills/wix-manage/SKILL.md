@@ -1,10 +1,12 @@
 ---
 name: wix-manage
-description: "Wix business solution management recipes — REST API operations for configuring and managing Wix business solutions. Routes to: stores, bookings, get-paid, CMS, contacts, events, forms, media, app-installation, pricing-plans, restaurants, rich-content, sites, blog, calendar, domains, site-properties, ecommerce."
+description: "Wix business solution management recipes — REST API operations for configuring and managing Wix business solutions. Routes to: stores, bookings, get-paid, CMS, contacts, forms, media, app-installation, pricing-plans, restaurants, rich-content, sites, blog, calendar, domains, site-properties, ecommerce."
 compatibility: Requires Wix REST API access (API key or OAuth).
 ---
 
 # Management Recipes Index
+
+> **Standard call shape for every curl example across these recipes.** The `<AUTH>` placeholder in example curls is shorthand for the `Authorization` header only; body-bearing calls also need `Content-Type: application/json`.
 
 ## What Are Management Recipes?
 
@@ -106,18 +108,69 @@ These recipes do NOT cover frontend development or SDK usage for displaying data
 
 ## eCommerce
 
+**Routing — pick the right entry point:**
+- **Any sales/business improvement request** (boost sales, promotions, help my business, holiday deals, improve revenue, discounts, shipping, coupons, clearance) → use [Recommend: eCommerce Strategy](references/ecommerce/recommend-ecommerce-strategy.md). This is the **default entry point** — it analyzes ALL domains (discounts, shipping, future: gift cards, taxes) and generates cross-domain recommendations. Do NOT ask clarifying questions.
+- **Apply previously generated shipping recommendations** → use [Recipe: Apply Shipping Recommendations](references/ecommerce/recipe-apply-shipping-recommendations.md)
+- **Store pickup configuration** → use [Setup Store Pickup Location](references/ecommerce/setup-store-pickup-location.md)
+- **Discount not working at checkout** → use [Troubleshoot: Discount Not Applying](references/ecommerce/troubleshoot-discount-not-applying.md)
+- **Checkout delivery step drop-off** → use [Troubleshoot: Checkout Delivery Drop-off](references/ecommerce/troubleshoot-checkout-delivery-dropoff.md)
+
+### [Recommend: eCommerce Strategy](references/ecommerce/recommend-ecommerce-strategy.md)
+**THE entry point for all eCommerce recommendation requests.** Unified skill that analyzes site data across ALL domains (discounts + shipping), generates up to 5 cross-domain recommendations, and persists them to the tracking database. Covers discount strategies (seasonal, upsell, stock mover, bundling) AND shipping optimization (coverage gaps, free shipping, rate strategy, carrier backup). Use this for ANY business improvement request.
+
 ### [Recipe: Apply Shipping Recommendations](references/ecommerce/recipe-apply-shipping-recommendations.md)
-**Technical:** Applies AI-generated shipping recommendations to a Wix e-commerce store. Reads the current delivery profile and shipping options, then creates or updates shipping options based on recommendation data. Supports creating new options with conditional rates, updating existing options, and querying delivery profiles for region/carrier context.
+**Technical:** Applies AI-generated shipping recommendations. Creates or updates shipping options based on recommendation data.
 
 ### [Setup Store Pickup Location](references/ecommerce/setup-store-pickup-location.md)
-**Technical:** Configures a pickup option for an online store so customers can choose in-store pickup at checkout. Uses the Delivery Profiles API to discover the Pickup carrier, add a delivery region, and attach the carrier with a free pickup rate.
+**Technical:** Configures in-store pickup at checkout using Delivery Profiles API.
 
----
+### [Troubleshoot: Discount Not Applying](references/ecommerce/troubleshoot-discount-not-applying.md)
+**Technical:** Diagnostic tree for inactive discounts — checks active status, time window, scope targeting, revision mismatch, app installation.
 
-## Events
+### [Troubleshoot: Checkout Delivery Drop-off](references/ecommerce/troubleshoot-checkout-delivery-dropoff.md)
+**Technical:** Diagnostic tree for delivery step conversion below 65% benchmark.
 
-### [List Events](references/events/list-events.md)
-**Technical:** Queries events from Wix Events using Events API. Covers field sets (DETAILS, URLS, REGISTRATION), filtering by status/date, and pagination.
+<details>
+<summary>Internal skills (loaded automatically by the entry points above — do NOT use directly)</summary>
+
+#### Goals
+- [Goal: Increase AOV](references/ecommerce/goal-increase-aov.md) — UPSELL_BOOST
+- [Goal: Clear Inventory](references/ecommerce/goal-clear-inventory.md) — STOCK_MOVER
+- [Goal: Seasonal Revenue](references/ecommerce/goal-seasonal-revenue.md) — SEASONAL
+- [Goal: Drive Cross-Sells](references/ecommerce/goal-drive-cross-sells.md) — BUNDLE_AND_SAVE
+- [Goal: Reduce Cart Abandonment](references/ecommerce/goal-reduce-cart-abandonment.md) — Shipping
+
+#### Flows
+- [Flow: Upsell Boost](references/ecommerce/flow-upsell-boost.md)
+- [Flow: Bundle and Save](references/ecommerce/flow-bundle-and-save.md)
+- [Flow: Stock Mover](references/ecommerce/flow-stock-mover.md)
+- [Flow: Seasonal Promotion](references/ecommerce/flow-seasonal-promotion.md)
+- [Flow: Fix Coverage Gaps](references/ecommerce/flow-fix-coverage-gaps.md)
+- [Flow: Add Free Shipping](references/ecommerce/flow-add-free-shipping.md)
+- [Flow: Optimize Shipping Rates](references/ecommerce/flow-optimize-shipping-rates.md)
+
+#### Guardrails
+- [Guardrail: Discount Conflicts](references/ecommerce/guardrail-discount-conflicts.md)
+- [Guardrail: Margin Protection](references/ecommerce/guardrail-margin-protection.md)
+- [Guardrail: Shipping Health](references/ecommerce/guardrail-shipping-health.md)
+- [Guardrail: Rate Pricing Sanity](references/ecommerce/guardrail-rate-pricing-sanity.md)
+
+#### Config & API References
+- [API: Recommendation Tracking](references/ecommerce/api-recommendation-tracking.md)
+- [API: Shipping Delivery](references/ecommerce/api-shipping.md)
+- [Setup: Discount Rules](references/ecommerce/setup-discount-rules.md)
+- [Setup: Coupons](references/ecommerce/setup-coupons.md)
+- [Setup: Shipping Regions](references/ecommerce/setup-shipping-regions.md)
+- [Setup: Shipping Rates](references/ecommerce/setup-shipping-rates.md)
+
+#### Tracking
+- Tracking is built into [Recommend: eCommerce Strategy](references/ecommerce/recommend-ecommerce-strategy.md) (Steps 2 + 8) — no separate skill needed
+- [API: Recommendation Tracking](references/ecommerce/api-recommendation-tracking.md) — CRUD API reference for the tracking service
+
+#### Reference
+- [Skill Graph](references/ecommerce/skill-graph.md)
+
+</details>
 
 ---
 
@@ -197,14 +250,9 @@ These recipes do NOT cover frontend development or SDK usage for displaying data
 ### [Bulk Create Products with Options](references/stores/bulk-create-products-with-options.md)
 **Technical:** Uses bulk products endpoint to create multiple products with inventory in a single request. Handles variant generation from options, media format requirements, and error handling for partial failures.
 
-### [Create Product from Image (Version Router)](references/stores/create-product-from-image-router.md)
-**Technical:** **MANDATORY entry point** for all "create product from image" flows. Detects the site's catalog version using Get Catalog Version endpoint, then routes to the correct version-specific recipe (V1 or V3). Always start here when the user wants to create a product from an image.
+### [Create Product from Image](references/stores/create-product-from-image.md)
+**Technical:** **MANDATORY entry point** for any "create product from image" or "create product from photo" request. STEP 1 auto-detects the site's catalog version (V1/V3) via the provision endpoint, then runs the matching flow inline — V3 supports up to 3 images, info sections, SEO, options/variants, and atomic creation; V1 supports a single image, simple product, and a separate media-attach call. Combines Media Upload + LLM analysis + Product Creation + (V1 only) Add Product Media in one self-contained recipe.
 
-### [Create Product from Image (Catalog V1)](references/stores/create-product-from-image.md)
-**Technical:** Creates a product by uploading an image to Wix Media, using the LLM to generate the product name, description, and price from the image, then attaching the media to the created product. Combines Media Upload + LLM analysis + Product Creation + Add Product Media into a single flow. **Catalog V1 only** — for V3 sites, use Create Product from Image (Catalog V3) instead.
-
-### [Create Product from Image (Catalog V3)](references/stores/create-product-from-image-catalog-v3.md)
-**Technical:** Creates a product by analyzing an image with the LLM to generate product name, description, and price, then creating the product with the image attached inline in a single API call. Uses Catalog V3 API with rich text nodes and inline media. **Catalog V3 only** — for V1 sites, use Create Product from Image (Catalog V1) instead.
 
 ### [Create Product (Catalog V1)](references/stores/create-product-catalog-v1.md)
 **Technical:** Create products using the Catalog V1 Products API. Use this recipe when the site's catalog version is CATALOG_V1. Covers simple product creation, product with options, and key V1 request structure differences from V3.

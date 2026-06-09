@@ -4,6 +4,8 @@ description: "Add, replace, or remove items from MULTI_REFERENCE fields. Use ins
 ---
 # CMS References & Relationships
 
+> **Standard call shape (every curl below).** The `<AUTH>` placeholder is shorthand for `Authorization: Bearer <TOKEN>` only. Body-bearing requests also need `Content-Type: application/json`.
+
 This recipe covers linking CMS collections together using reference fields.
 
 ## Prerequisites
