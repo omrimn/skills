@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import * as core from '@actions/core';
 import { upsertComment, fail, findOpenRegressionIssue, upsertRegressionIssue, closeRegressionIssue, REGRESSION_LABEL } from '../src/utils/github';
 import { COMMENT_MARKER } from '../src/utils/comment';
-import type { PrConfig } from '../src/utils/config';
+import type { Config } from '../src/utils/config';
 
 vi.mock('@actions/core', () => ({
   error: vi.fn(),
@@ -11,8 +11,7 @@ vi.mock('@actions/core', () => ({
   summary: { addRaw: vi.fn().mockReturnValue({ write: vi.fn().mockResolvedValue(undefined) }) },
 }));
 
-const config: PrConfig = {
-  mode: 'pr',
+const config: Config = {
   githubToken: 'token',
   evalforgeUrl: 'https://evalforge.example.com',
   projectId: 'proj-1',

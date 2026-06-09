@@ -1,6 +1,6 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
-import type { PrConfig } from './config';
+import type { Config } from './config';
 import type { ChangedFile } from './paths';
 import { COMMENT_MARKER } from './comment';
 
@@ -11,7 +11,7 @@ export function fail(message: string, blocking: boolean): void {
   else core.warning(message);
 }
 
-export async function getChangedFiles(octokit: Octokit, config: PrConfig): Promise<ChangedFile[]> {
+export async function getChangedFiles(octokit: Octokit, config: Config): Promise<ChangedFile[]> {
   const files = await octokit.paginate(octokit.rest.pulls.listFiles, {
     owner: config.owner,
     repo: config.repo,
@@ -25,7 +25,7 @@ export async function getChangedFiles(octokit: Octokit, config: PrConfig): Promi
   }));
 }
 
-export async function upsertComment(octokit: Octokit, config: PrConfig, body: string): Promise<void> {
+export async function upsertComment(octokit: Octokit, config: Config, body: string): Promise<void> {
   try {
     const comments = await octokit.paginate(octokit.rest.issues.listComments, {
       owner: config.owner,

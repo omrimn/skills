@@ -79,7 +79,7 @@ describe('createMcpVersion', () => {
       ok: true, status: 201, json: async () => capVersion,
     } as Response);
 
-    const result = await CLIENT.createMcpVersion('mcp-1', 'proj-1', 'pr-42-abc1234', 42, 'abc1234deadbeef');
+    const result = await CLIENT.createMcpVersion('mcp-1', 'proj-1', 'pr-42-abc1234', 'abc1234deadbeef', 42);
 
     expect(result.id).toBe('ver-uuid-1');
     expect(result.version).toBe('pr-42-abc1234');
