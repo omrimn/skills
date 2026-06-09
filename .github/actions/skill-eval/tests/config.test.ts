@@ -1,18 +1,19 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 vi.mock('@actions/core', () => ({ getInput: vi.fn(), setSecret: vi.fn() }));
-vi.mock('@actions/github', () => ({
-  context: {
-    payload: {
-      pull_request: {
-        number: 42,
-        base: { sha: 'base-sha-123' },
-        head: { sha: 'head-sha-456' },
-      },
+const mockGithubContext = {
+  sha: 'main-sha-789',
+  payload: {
+    pull_request: {
+      number: 42,
+      base: { sha: 'base-sha-123' },
+      head: { sha: 'head-sha-456' },
     },
-    repo: { owner: 'wix', repo: 'skills' },
   },
-}));
+  repo: { owner: 'wix', repo: 'skills' },
+};
+
+vi.mock('@actions/github', () => ({ context: mockGithubContext }));
 
 import * as core from '@actions/core';
 import { getConfig } from '../src/utils/config';
@@ -32,7 +33,7 @@ beforeEach(() => {
   vi.mocked(core.getInput).mockImplementation((name: string) => ALL_INPUTS[name] ?? '');
 });
 
-describe('getConfig', () => {
+describe('getConfig in pr mode', () => {
   it('returns config with all fields populated', () => {
     const config = getConfig();
     expect(config.githubToken).toBe('ghs_token');
@@ -42,9 +43,12 @@ describe('getConfig', () => {
     expect(config.mcpId).toBe('mcp-1');
     expect(config.appId).toBe('app-1');
     expect(config.appSecret).toBe('secret-1');
-    expect(config.prNumber).toBe(42);
-    expect(config.baseSha).toBe('base-sha-123');
-    expect(config.headSha).toBe('head-sha-456');
+    expect(config.mode).toBe('pr');
+    if (config.mode === 'pr') {
+      expect(config.prNumber).toBe(42);
+      expect(config.baseSha).toBe('base-sha-123');
+      expect(config.headSha).toBe('head-sha-456');
+    }
     expect(config.owner).toBe('wix');
     expect(config.repo).toBe('skills');
   });
@@ -79,5 +83,33 @@ describe('getConfig', () => {
       return ALL_INPUTS[name] ?? '';
     });
     expect(() => getConfig()).toThrow('evalforge-url');
+  });
+});
+
+describe('getConfig in scheduled mode', () => {
+  beforeEach(() => {
+    vi.mocked(core.getInput).mockImplementation((name: string) => ({
+      ...ALL_INPUTS,
+      mode: 'scheduled',
+    }[name] ?? ''));
+  });
+
+  it('returns scheduled config with headSha from context', () => {
+    const config = getConfig();
+    expect(config.mode).toBe('scheduled');
+    expect(config.headSha).toBe('main-sha-789');
+  });
+
+  it('does not include prNumber or baseSha', () => {
+    const config = getConfig();
+    expect('prNumber' in config).toBe(false);
+    expect('baseSha' in config).toBe(false);
+  });
+
+  it('includes all base fields', () => {
+    const config = getConfig();
+    expect(config.projectId).toBe('proj-1');
+    expect(config.owner).toBe('wix');
+    expect(config.repo).toBe('skills');
   });
 });

@@ -70,11 +70,11 @@ export class EvalForgeClient {
     return this.request<CapabilityVersion[]>('GET', `/projects/${projectId}/capabilities/${mcpId}/versions`);
   }
 
-  async createMcpVersion(mcpId: string, projectId: string, versionLabel: string, prNumber: number, headSha: string): Promise<CapabilityVersion> {
+  async createMcpVersion(mcpId: string, projectId: string, versionLabel: string, headSha: string, prNumber?: number): Promise<CapabilityVersion> {
     return this.request<CapabilityVersion>('POST', `/projects/${projectId}/capabilities/${mcpId}/versions`, {
       version: versionLabel,
       origin: 'pr',
-      notes: `Auto-created for PR #${prNumber}`,
+      notes: prNumber !== undefined ? `Auto-created for PR #${prNumber}` : 'Auto-created for scheduled eval',
       content: {
         config: {
           [MCP_CONFIG_KEY]: {

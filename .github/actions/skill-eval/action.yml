@@ -26,6 +26,9 @@ inputs:
     description: 'Fail the check on EvalForge errors or eval failures (set to false to make eval non-blocking)'
     required: false
     default: 'true'
+  mode:
+    description: "'pr' runs lightweight validation only. 'scheduled' runs the full eval against recently changed skill tags."
+    required: true
 runs:
   using: 'node20'
   main: 'dist/index.js'
